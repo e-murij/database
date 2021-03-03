@@ -47,10 +47,32 @@ INSERT INTO flights (`from` , `to`) VALUES
   ('omsk', 'омск'),
   ('kazan', 'казань');
  
+ -- вложенный запрос
+ 
 SELECT
 	id,
 	(SELECT name FROM cities WHERE label = flights.`from`) AS `from`,
 	(SELECT name FROM cities WHERE label = flights.`to`) AS `to`
 FROM
 	flights;
+
+-- join
+
+SELECT
+	flights.id,
+	city_from.name AS `from`,
+	city_to.name AS `to`
+FROM
+	flights
+JOIN 
+	cities AS city_from
+ON 
+	flights.`from` = city_from.label 
+JOIN 
+	cities AS city_to
+ON 
+	flights.`to` = city_to.label
+ORDER BY
+	flights.id;
+
 
