@@ -1,3 +1,42 @@
+DROP FUNCTION IF EXISTS product_name;
+DELIMITER //
+
+CREATE FUNCTION product_name(product_id INT, products_category_id INT)
+RETURNS VARCHAR(100) READS SQL DATA
+
+COMMENT 'Название товара id = product_id в категории products_category_id'
+BEGIN
+  DECLARE table_name VARCHAR(50);
+  SELECT name FROM products_categories WHERE id = products_category_id INTO table_name;
+  
+  CASE table_name
+    WHEN 'books' THEN
+      RETURN (SELECT name FROM books WHERE id = product_id);
+    WHEN 'related products' THEN 
+      RETURN (SELECT name FROM related_products WHERE id = product_id);
+  END CASE;
+  
+END//
+
+DROP FUNCTION IF EXISTS product_price;
+DELIMITER //
+
+CREATE FUNCTION product_price(product_id INT, products_category_id INT)
+RETURNS decimal(11,2) READS SQL DATA
+
+COMMENT 'Цена товара id = product_id в категории products_category_id'
+BEGIN
+  DECLARE table_name VARCHAR(50);
+  SELECT name FROM products_categories WHERE id = products_category_id INTO table_name;
+  
+  CASE table_name
+    WHEN 'books' THEN
+      RETURN (SELECT price FROM books WHERE id = product_id);
+    WHEN 'related products' THEN 
+      RETURN (SELECT price FROM related_products WHERE id = product_id);
+  END CASE;
+  
+END//
 
 DROP FUNCTION IF EXISTS is_row_exists;
 DELIMITER //

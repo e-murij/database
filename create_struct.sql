@@ -2,7 +2,6 @@ DROP TABLE IF EXISTS books;
 CREATE TABLE books(
   id INT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
   category_id INT UNSIGNED NOT NULL, 
-  autor_id INT UNSIGNED NOT NULL,
   publishing_house_id INT UNSIGNED NOT NULL,
   name VARCHAR(100),
   annotation TEXT,
@@ -43,6 +42,16 @@ CREATE TABLE autors(
   last_name VARCHAR(100) NOT NULL,
   created_at DATETIME DEFAULT CURRENT_TIMESTAMP
 )COMMENT 'Авторы';
+
+DROP TABLE IF EXISTS autors_books;
+CREATE TABLE autors_books
+(
+    id INT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
+    autor_id INT UNSIGNED NOT NULL,
+    book_id INT UNSIGNED NOT NULL,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+  	updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) COMMENT 'Авторы книг';
 
 DROP TABLE IF EXISTS publishing_houses;
 CREATE TABLE publishing_houses(
@@ -85,7 +94,7 @@ CREATE TABLE profiles (
   city VARCHAR(100),
   address VARCHAR(100),
   bithday DATE,
-  gender CHAR(1) NOT NULL,
+  gender ENUM('M','F') NOT NULL,
   created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
   updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 )COMMENT 'Профили клиентов/покупателей';
@@ -142,9 +151,12 @@ UPDATE orders SET updated_at = NOW() WHERE updated_at < created_at;
 UPDATE orders_products SET updated_at = NOW() WHERE updated_at < created_at;
 UPDATE clients SET updated_at = NOW() WHERE updated_at < created_at;
 UPDATE profiles SET updated_at = NOW() WHERE updated_at < created_at;
+UPDATE autors_books SET updated_at = NOW() WHERE updated_at < created_at;
 
-SELECT * FROM books;
+SELECT * FROM profiles;
 SELECT * FROM related_products;
+
+ALTER TABLE profiles MODIFY gender ENUM('M','F');
 
 --  внешние ключи
 
@@ -179,6 +191,12 @@ ALTER TABLE orders
     ON DELETE CASCADE,
   ADD CONSTRAINT orders_products_category_id_fk
     FOREIGN KEY (products_category_id) REFERENCES products_categories(id);
+   
+ ALTER TABLE autors_books
+  ADD CONSTRAINT autors_books_autor_id_fk
+    FOREIGN KEY (autor_id) REFERENCES autors(id),
+  ADD CONSTRAINT autor_id_book_id_fk
+    FOREIGN KEY (book_id) REFERENCES books(id);
   
 -- индексы
 
@@ -203,9 +221,6 @@ CREATE INDEX shops_city_idx ON shops(city);
 
 SELECT * FROM clients;
 CREATE INDEX clients_first_name_last_name_idx ON clients(first_name, last_name);
-
-SELECT * FROM clients;
-CREATE INDEX clients_email_idx ON clients(email);
 
 ALTER TABLE profiles RENAME COLUMN bithday TO birthday;
 SELECT * FROM profiles;

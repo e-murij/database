@@ -1,16 +1,22 @@
+-- поиск книг по фамилии автора
+SELECT
+books.name,
+books.annotation,
+books.price,
+CONCAT_WS(' ', autors.first_name, autors.last_name) AS autor
+FROM books LEFT JOIN autors_books 
+		ON books.id = autors_books.book_id 
+			LEFT JOIN autors 
+				ON autors.id = autors_books.autor_id
+WHERE autors.last_name = 'Maggio';
+
 -- состав заказа по номеру заказа
 SELECT 
  	orders.id,
  	products_categories.name AS category,
  	orders_products.`count`,
- 	CASE orders_products.products_category_id
- 		WHEN 1 THEN books.name
- 		WHEN 2 THEN related_products.name
- 	END AS name,
- 	CASE orders_products.products_category_id
- 		WHEN 1 THEN books.price 
- 		WHEN 2 THEN related_products.price 
- 	END AS price
+ 	(SELECT product_name(orders_products.product_id, orders_products.products_category_id)) AS name,
+ 	(SELECT product_price(orders_products.product_id, orders_products.products_category_id)) AS price
 FROM 
 	orders JOIN orders_products
 			ON orders_products.order_id = orders.id
@@ -29,14 +35,8 @@ SELECT
   (SELECT 
   	orders.id AS id,
  	orders_products.`count` AS `count`,
- 	CASE orders_products.products_category_id
- 		WHEN 1 THEN books.name
- 		WHEN 2 THEN related_products.name
- 	END AS product,
- 	CASE orders_products.products_category_id
- 		WHEN 1 THEN books.price 
- 		WHEN 2 THEN related_products.price 
- 	END AS price
+ 	(SELECT product_name(orders_products.product_id, orders_products.products_category_id)) AS name,
+ 	(SELECT product_price(orders_products.product_id, orders_products.products_category_id)) AS price
 FROM 
 	orders JOIN orders_products
 			ON orders_products.order_id = orders.id
@@ -52,12 +52,9 @@ WHERE orders.id = 4) AS `order`;
 
 SELECT * FROM
 (SELECT
-	CONCAT_WS(' ', autors.first_name, autors.last_name) AS autors, 
 	books.name,
 	COUNT(orders_products.product_id) AS order_count
-FROM books JOIN autors
-		ON autors.id = books.autor_id 
-			LEFT JOIN orders_products
+FROM books LEFT JOIN orders_products
 				ON orders_products.product_id  = books.id AND orders_products.products_category_id = 1
 GROUP BY books.id) AS popular_book
 ORDER BY order_count DESC LIMIT 10;
@@ -69,11 +66,12 @@ SELECT
 	related_products.name,
 	related_products.price,
 	related_product_categories.name,
-	AVG(related_products.price) OVER(PARTITION BY category_id) AS 'avg_price_category',
-	COUNT(related_products.id) OVER(PARTITION BY category_id) AS 'count',
-	(COUNT(related_products.id) OVER(PARTITION BY category_id)) / COUNT(related_products.id) OVER() * 100 AS '%'
+	AVG(related_products.price) OVER w AS 'avg_price_category',
+	COUNT(related_products.id) OVER w AS 'count',
+	(COUNT(related_products.id) OVER w) / COUNT(related_products.id) OVER() * 100 AS '%'
 FROM related_products JOIN related_product_categories 
 		ON related_products.category_id =  related_product_categories.id
+		WINDOW w AS (PARTITION BY category_id);
 ORDER BY related_products.category_id;
 
 -- кто делает больше заказов мужчины или женщины
