@@ -4,9 +4,9 @@ books.name,
 books.annotation,
 books.price,
 CONCAT_WS(' ', autors.first_name, autors.last_name) AS autor
-FROM books LEFT JOIN autors_books 
+FROM books JOIN autors_books 
 		ON books.id = autors_books.book_id 
-			LEFT JOIN autors 
+			JOIN autors 
 				ON autors.id = autors_books.autor_id
 WHERE autors.last_name = 'Maggio';
 
